@@ -1,0 +1,4 @@
+vectfit
+=========================
+
+.. automodule:: vectfit
