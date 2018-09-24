@@ -111,7 +111,7 @@ setup(
     version=__version__,
     author='Jingang Liang',
     author_email='liangjg2008@gmail.com',
-    url='https://github.com/liangjg/vectfit',
+    url='https://github.com/mit-crpg/vectfit',
     description= 'Fast Relaxed Vector Fitting Implementation in C++',
     long_description=long_description,
     ext_modules=ext_modules,
