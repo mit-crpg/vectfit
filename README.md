@@ -56,7 +56,7 @@ f = np.array([[4.98753117e-02, 3.09734513e-01, 1.18811881e+00,
                6.93069307e+00]])
 weight = 1.0/f
 init_poles = [4.5 + 0.045j, 4.5 - 0.045j]
-residues, cf, poles, rms, fit = m.vectfit(f, s, init_poles, weight)
+poles, residues, cf, fit, rms = m.vectfit(f, s, init_poles, weight)
 ```
 
 ## Installation

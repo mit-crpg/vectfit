@@ -19,6 +19,94 @@
 
 using namespace std::complex_literals;
 
+// Complex number zero
+constexpr std::complex<double> C_ZERO {0.0, 0.0};
+
+// Tolerances used by relaxed vector fitting
+constexpr double TOLlow  = 1e-18;
+constexpr double TOLhigh = 1e+18;
+
+//! Multipole formalism evaluation function
+//!
+//! f(s) = REAL[residues/(s - poles)] + Polynomials
+//!
+//! @param s          points to be evaluated. dimension: (Ns)
+//! @param poles      poles. dimension: (N)
+//! @param residues   residues. dimension: (Nv, N)
+//! @param polys      curvefit (Polynomial) coefficients. dimension: (Nv, Nc)
+//! @return           f. dimension: (Nv, Ns)
+
+xt::pyarray<double>
+evaluate(xt::pyarray<double> s,
+         xt::pyarray<std::complex<double>> poles,
+         xt::pyarray<std::complex<double>> residues,
+         xt::pyarray<double> polys)
+{
+  // Check arguments
+  if (s.dimension() != 1)
+  {
+    throw std::invalid_argument("Error: input s is not 1-dimensional.");
+  }
+  auto Ns = s.size();
+
+  if (poles.dimension() != 1)
+  {
+    throw std::invalid_argument("Error: input poles is not 1-dimensional.");
+  }
+  auto N = poles.size();
+
+  if (residues.dimension() == 1 && residues.size() == N)
+  {
+    residues.reshape({1, N});
+  }
+  else if (residues.dimension() != 2)
+  {
+    throw std::invalid_argument("Error: input residues is not 2-dimensional.");
+  }
+  else if (residues.shape()[1] != N)
+  {
+    throw std::invalid_argument("Error: 2nd dimension of residues does not "
+                                "match the length of poles.");
+  }
+  auto Nv = residues.shape()[0];
+
+  if (polys.dimension() == 1 && Nv == 1)
+  {
+    polys.reshape({1, polys.size()});
+  }
+  else if (polys.dimension() !=2)
+  {
+    throw std::invalid_argument("Error: input polys is not 2-dimensional.");
+  }
+  else if (polys.shape()[0] != Nv)
+  {
+    throw std::invalid_argument("Error: 1st dimension of polys does not "
+                                "match the 1st dimension of residues.");
+  }
+  auto Nc = polys.shape()[1];
+
+  // Initialize
+  xt::pyarray<double> f({Nv, Ns}, 0.0);
+
+  // Evaluate
+  size_t m, n;
+  xt::xtensor<std::complex<double>, 2> Dk2({Ns, N}, C_ZERO);
+  for (m = 0; m < N; m++)
+  {
+    xt::view(Dk2, xt::all(), m) = 1.0 / (s - poles(m));
+  }
+  for (n = 0; n < Nv; n++)
+  {
+    xt::view(f, n) = xt::real(xt::linalg::dot(Dk2,
+                    xt::xarray<std::complex<double>>(xt::view(residues, n))));
+    for (m = 0; m < Nc; m++)
+    {
+      xt::view(f, n) += xt::pow(s, m) * polys(n, m);
+    }
+  }
+
+  return f;
+}
 
 //! Fast Relaxed Vector Fitting function
 //!
@@ -50,20 +138,20 @@ using namespace std::complex_literals;
 //! @param n_polys    Nc: Number of curvefit (Polynomial) coefficients, [0, 11]
 //! @param skip_pole  if the pole identification part is skipped
 //! @param skip_res   if the residue identification part is skipped
-//! @return           Tuple(R, P, poles, rmserr, fit)
+//! @return           Tuple(poles, residues, polys, fit, rmserr)
 
-// Complex number zero
-constexpr std::complex<double> C_ZERO {0.0, 0.0};
-
-// Tolerances used by relaxed vector fitting
-constexpr double TOLlow  = 1e-18;
-constexpr double TOLhigh = 1e+18;
-
-std::tuple<xt::pyarray<std::complex<double>>, xt::pyarray<double>,
-           xt::pyarray<std::complex<double>>, double, xt::pyarray<double>>
-vectfit(xt::pyarray<double> &f, xt::pyarray<double> &s,
-        xt::pyarray<std::complex<double>> &poles, xt::pyarray<double> &weight,
-        int n_polys = 0, bool skip_pole = false, bool skip_res = false)
+std::tuple<xt::pyarray<std::complex<double>>,
+           xt::pyarray<std::complex<double>>,
+           xt::pyarray<double>,
+           xt::pyarray<double>,
+           double>
+vectfit(xt::pyarray<double> &f,
+        xt::pyarray<double> &s,
+        xt::pyarray<std::complex<double>> &poles,
+        xt::pyarray<double> &weight,
+        int n_polys = 0,
+        bool skip_pole = false,
+        bool skip_res = false)
 {
   // Arguments
   if (f.dimension() != 2)
@@ -104,7 +192,7 @@ vectfit(xt::pyarray<double> &f, xt::pyarray<double> &s,
   if (N == 0 && Nc == 0)
   {
     rmserr = xt::linalg::norm(f) / std::sqrt(Nv * Ns);
-    return std::make_tuple(residues, polys, poles, rmserr, fit);
+    return std::make_tuple(poles, residues, polys, fit, rmserr);
   }
 
   // Iteration variables
@@ -137,7 +225,7 @@ vectfit(xt::pyarray<double> &f, xt::pyarray<double> &s,
 
     // Building system - matrixes
     xt::xtensor<std::complex<double>, 2> Dk({Ns, N + std::max(Nc, (size_t)1)},
-                                             C_ZERO);
+                                            C_ZERO);
     for (m = 0; m < N; m++)
     {
       auto p = poles(m);
@@ -421,26 +509,13 @@ vectfit(xt::pyarray<double> &f, xt::pyarray<double> &s,
     }
 
     // Calculate fit on s
-    xt::xtensor<std::complex<double>, 2> Dk2({Ns, N}, C_ZERO);
-    for (m = 0; m < N; m++)
-    {
-      xt::view(Dk2, xt::all(), m) = 1.0 / (s - poles(m));
-    }
-    for (n = 0; n < Nv; n++)
-    {
-      xt::view(fit, n) = xt::real(xt::linalg::dot(Dk2,
-                      xt::xarray<std::complex<double>>(xt::view(residues, n))));
-      for (m = 0; m < Nc; m++)
-      {
-        xt::view(fit, n) += xt::pow(s, m) * polys(n, m);
-      }
-    }
+    fit = evaluate(s, poles, residues, polys);
 
     // RMS error
     rmserr = xt::linalg::norm(fit - f) / std::sqrt(Nv * Ns);
   }
 
-  return std::make_tuple(residues, polys, poles, rmserr, fit);
+  return std::make_tuple(poles, residues, polys, fit, rmserr);
 }
 
 
@@ -461,6 +536,7 @@ PYBIND11_MODULE(vectfit, m)
            :toctree: _generate
 
            vectfit
+           evaluate
     )pbdoc";
 
     m.def("vectfit", &vectfit, R"pbdoc(
@@ -490,13 +566,38 @@ PYBIND11_MODULE(vectfit, m)
 
         Returns
         -------
-        Tuple : (numpy.ndarray [complex], numpy.ndarray, numpy.ndarray [complex], float, numpy.ndarray)
-            the updated residues, polynomial coefficients, poles, RMS error,
-            fitted signals on the sample points
+        Tuple : (numpy.ndarray [complex], numpy.ndarray [complex], numpy.ndarray, numpy.ndarray, float)
+            the updated poles, residues, polynomial coefficients,
+            fitted signals on the sample points, root mean square error
 
     )pbdoc", py::arg("f"), py::arg("s"), py::arg("poles"), py::arg("weight"),
     py::arg("n_polys") = 0, py::arg("skip_pole") = false,
     py::arg("skip_res") = false);
+
+    m.def("evaluate", &evaluate, R"pbdoc(
+        Multipole formalism evaluation function
+
+        Evaluate the multipole formalism at given points with known poles,
+        residues and polynomial coefficients.
+
+        Parameters
+        ----------
+        s : numpy.ndarray
+            A 1D array of the points, (Ns)
+        poles : numpy.ndarray [complex]
+            A 1D array of the poles, (N)
+        residues : numpy.ndarray [complex]
+            2D array of residues, (Nv, N)
+        polys : int
+            Polynomial coefficients, (Nv, Nc)
+
+        Returns
+        -------
+        fit : numpy.ndarray
+            the result array of multipole formalism (real part)
+
+    )pbdoc", py::arg("s"), py::arg("poles"), py::arg("residues"),
+    py::arg("polys"));
 
 #ifdef VERSION_INFO
     m.attr("__version__") = VERSION_INFO;

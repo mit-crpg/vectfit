@@ -21,7 +21,7 @@ class VectfitTest(TestCase):
                   test_residues[1][1]/(test_s - test_poles[1]))
         weight = 1.0/f
         init_poles = [3.5 + 0.035j, 3.5 - 0.035j]
-        residues, cf, poles, rms, fit = m.vectfit(f, test_s, init_poles, weight)
+        poles, residues, cf, fit, rms = m.vectfit(f, test_s, init_poles, weight)
         np.testing.assert_allclose(test_poles, poles, rtol=1e-7)
         np.testing.assert_allclose(test_residues, residues, rtol=1e-7)
         np.testing.assert_allclose(f, fit, rtol=1e-5)
@@ -43,10 +43,10 @@ class VectfitTest(TestCase):
         # intial poles
         init_poles = [2.5 + 0.025j, 2.5 - 0.025j]
         # iteration 1
-        residues, cf, poles, rms, fit = m.vectfit(f, test_s, init_poles,
+        poles, residues, cf, fit, rms = m.vectfit(f, test_s, init_poles,
                                                   weight, n_polys=3)
         # iteration 2
-        residues, cf, poles, rms, fit = m.vectfit(f, test_s, poles,
+        poles, residues, cf, fit, rms = m.vectfit(f, test_s, poles,
                                                   weight, n_polys=3)
         np.testing.assert_allclose(test_poles, poles, rtol=1e-5)
         np.testing.assert_allclose(test_residues, residues, rtol=1e-5)
@@ -112,7 +112,7 @@ class VectfitTest(TestCase):
         poles = np.sort(np.append(poles, np.conj(poles)))
         # VF iterations
         for i in range(10):
-            residues, cf, poles, rms, fit = m.vectfit(f, test_s, poles, weight)
+            poles, residues, cf, fit, rms = m.vectfit(f, test_s, poles, weight)
         np.testing.assert_allclose(np.sort(test_poles), np.sort(poles))
         np.testing.assert_allclose(np.sort(test_residues), np.sort(residues))
         np.testing.assert_allclose(f, fit, 1e-3)
@@ -137,6 +137,6 @@ class VectfitTest(TestCase):
         poles_init = poles_init + poles_init*0.01j
         poles_init = np.sort(np.append(poles_init, np.conj(poles_init)))
 
-        residues_fit, cf, poles_fit, rms, f_fit = m.vectfit(f, s, poles_init, weight)
+        poles_fit, residues_fit, cf, f_fit, rms = m.vectfit(f, s, poles_init, weight)
 
         np.testing.assert_allclose(f, f_fit, 1e-3)
