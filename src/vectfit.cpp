@@ -40,7 +40,7 @@ xt::pyarray<double>
 evaluate(xt::pyarray<double> s,
          xt::pyarray<std::complex<double>> poles,
          xt::pyarray<std::complex<double>> residues,
-         xt::pyarray<double> polys)
+         xt::pyarray<double> polys = (xt::pyarray<double>) {})
 {
   // Check arguments
   if (s.dimension() != 1)
@@ -70,7 +70,11 @@ evaluate(xt::pyarray<double> s,
   }
   auto Nv = residues.shape()[0];
 
-  if (polys.dimension() == 1 && Nv == 1)
+  if (polys.dimension() == 0 || xt::all(xt::equal(polys, 0.)))
+  {
+    polys = xt::zeros<double>({Nv, (size_t)0});
+  }
+  else if (polys.dimension() == 1 && Nv == 1)
   {
     polys.reshape({1, polys.size()});
   }
@@ -588,16 +592,16 @@ PYBIND11_MODULE(vectfit, m)
             A 1D array of the poles, (N)
         residues : numpy.ndarray [complex]
             2D array of residues, (Nv, N)
-        polys : int
-            Polynomial coefficients, (Nv, Nc)
+        polys : numpy.ndarray
+            Polynomial coefficients (0-th to Nc-th order), (Nv, Nc)
 
         Returns
         -------
-        fit : numpy.ndarray
+        f : numpy.ndarray
             the result array of multipole formalism (real part)
 
     )pbdoc", py::arg("s"), py::arg("poles"), py::arg("residues"),
-    py::arg("polys"));
+    py::arg("polys") = (xt::pyarray<double>) {});
 
 #ifdef VERSION_INFO
     m.attr("__version__") = VERSION_INFO;
