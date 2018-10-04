@@ -34,11 +34,7 @@ class VectfitTest(TestCase):
         test_poles = [-20.0+30.0j, -20.0-30.0j]
         test_residues = [[5.0+10.0j, 5.0-10.0j]]
         test_polys = [[1.0, 2.0, 0.3]]
-        f = np.zeros([1, Ns])
-        f[0, :] = np.real(test_residues[0][0]/(test_s - test_poles[0]) + \
-                  test_residues[0][1]/(test_s - test_poles[1]))
-        for n, c in enumerate(test_polys[0]):
-            f[0, :] += c*np.power(test_s, n)
+        f = m.evaluate(test_s, test_poles, test_residues, test_polys)
         weight = 1.0/f
         # intial poles
         init_poles = [2.5 + 0.025j, 2.5 - 0.025j]
@@ -140,3 +136,37 @@ class VectfitTest(TestCase):
         poles_fit, residues_fit, cf, f_fit, rms = m.vectfit(f, s, poles_init, weight)
 
         np.testing.assert_allclose(f, f_fit, 1e-3)
+
+    def test_evaluate(self):
+        """Test evaluate function"""
+        Ns = 101
+        s = np.linspace(-5., 5., Ns)
+        poles = [-2.0+30.0j, -2.0-30.0j]
+        residues = [5.0+10.0j, 5.0-10.0j]
+        f_ref = np.zeros([1, Ns])
+        f_ref[0, :] = np.real(residues[0]/(s - poles[0]) + \
+                              residues[1]/(s - poles[1]))
+        f = m.evaluate(s, poles, residues)
+        np.testing.assert_allclose(f_ref, f)
+
+        polys = [1.0, 2.0, 0.3]
+        for n, c in enumerate(polys):
+            f_ref[0, :] += c*np.power(s, n)
+        f = m.evaluate(s, poles, residues, polys)
+        np.testing.assert_allclose(f_ref, f)
+
+        poles = [5.0+0.1j, 5.0-0.1j]
+        residues = [[0.5-11.0j, 0.5+11.0j],
+                    [1.5-20.0j, 1.5+20.0j]]
+        polys = [[1.0, 2.0, 0.3], [4.0, -2.0, -10.0]]
+        f_ref = np.zeros([2, Ns])
+        f_ref[0, :] = np.real(residues[0][0]/(s - poles[0]) + \
+                              residues[0][1]/(s - poles[1]))
+        f_ref[1, :] = np.real(residues[1][0]/(s - poles[0]) + \
+                              residues[1][1]/(s - poles[1]))
+        for n, c in enumerate(polys[0]):
+            f_ref[0, :] += c*np.power(s, n)
+        for n, c in enumerate(polys[1]):
+            f_ref[1, :] += c*np.power(s, n)
+        f = m.evaluate(s, poles, residues, polys)
+        np.testing.assert_allclose(f_ref, f)
