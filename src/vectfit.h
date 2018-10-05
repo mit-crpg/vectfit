@@ -21,9 +21,9 @@ vectfit(xt::pyarray<double> &f,
 
 //! Multipole formalism evaluation function
 xt::pyarray<double>
-evaluate(xt::pyarray<double> &s,
-         xt::pyarray<std::complex<double>> &poles,
-         xt::pyarray<std::complex<double>> &residues,
-         xt::pyarray<double> &polys);
+evaluate(xt::pyarray<double> s,
+         xt::pyarray<std::complex<double>> poles,
+         xt::pyarray<std::complex<double>> residues,
+         xt::pyarray<double> polys = (xt::pyarray<double>) {});
 
 #endif // VECTFIT_H

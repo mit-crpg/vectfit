@@ -28,9 +28,11 @@ constexpr double TOLhigh = 1e+18;
 
 //! Multipole formalism evaluation function
 //!
-//! f(s) = REAL[residues/(s - poles)] + Polynomials
+//! f(s) = REAL[residues/(s - poles)] + Polynomials(s)
+//! Note the input variable s is real and only the real part of the
+//! result f is returned.
 //!
-//! @param s          points to be evaluated. dimension: (Ns)
+//! @param s          array of variables to be evaluated. dimension: (Ns)
 //! @param poles      poles. dimension: (N)
 //! @param residues   residues. dimension: (Nv, N)
 //! @param polys      curvefit (Polynomial) coefficients. dimension: (Nv, Nc)
@@ -42,19 +44,23 @@ evaluate(xt::pyarray<double> s,
          xt::pyarray<std::complex<double>> residues,
          xt::pyarray<double> polys = (xt::pyarray<double>) {})
 {
-  // Check arguments
+  // Check input arguments
+  // s
   if (s.dimension() != 1)
   {
     throw std::invalid_argument("Error: input s is not 1-dimensional.");
   }
   auto Ns = s.size();
 
+  // poles
   if (poles.dimension() != 1)
   {
     throw std::invalid_argument("Error: input poles is not 1-dimensional.");
   }
   auto N = poles.size();
 
+  // residues
+  // convert the residues to be two dimensional if it is one dimensional
   if (residues.dimension() == 1 && residues.size() == N)
   {
     residues.reshape({1, N});
@@ -70,6 +76,8 @@ evaluate(xt::pyarray<double> s,
   }
   auto Nv = residues.shape()[0];
 
+  // polynomial coefficients
+  // none polynomials by default
   if (polys.dimension() == 0 || xt::all(xt::equal(polys, 0.)))
   {
     polys = xt::zeros<double>({Nv, (size_t)0});
@@ -89,10 +97,10 @@ evaluate(xt::pyarray<double> s,
   }
   auto Nc = polys.shape()[1];
 
-  // Initialize
+  // Initialize results array
   xt::pyarray<double> f({Nv, Ns}, 0.0);
 
-  // Evaluate
+  // Evaluate the multipole form
   size_t m, n;
   xt::xtensor<std::complex<double>, 2> Dk2({Ns, N}, C_ZERO);
   for (m = 0; m < N; m++)
@@ -109,13 +117,15 @@ evaluate(xt::pyarray<double> s,
     }
   }
 
+  // Return
   return f;
 }
+
 
 //! Fast Relaxed Vector Fitting function
 //!
 //! Approximate f(s) with a rational function:
-//!         f(s)=R*(s*I-A)^(-1) + Polynomials*P
+//!         f(s)=R*(s*I-A)^(-1) + Polynomials*s
 //! where f(s) is a vector of elements.
 //! When f(s) is a vector, all elements become fitted with a common pole set.
 //! The identification is done using the pole relocating method known as Vector
@@ -157,7 +167,7 @@ vectfit(xt::pyarray<double> &f,
         bool skip_pole = false,
         bool skip_res = false)
 {
-  // Arguments
+  // Check input arguments
   if (f.dimension() != 2)
   {
     throw std::invalid_argument("Error: input f is not 2-dimensional.");
@@ -186,7 +196,7 @@ vectfit(xt::pyarray<double> &f,
     throw std::invalid_argument("Error: input n_polys is not in range [0, 11].");
   }
 
-  // Initialize
+  // Initialize arrays
   xt::pyarray<std::complex<double>> residues({Nv, N}, C_ZERO); // residues (R)
   xt::pyarray<double> polys({Nv, Nc}, 0.0); // polynomial coefficients (P)
   xt::pyarray<double> fit({Nv, Ns}, 0.0); // fitted signals on s
@@ -243,7 +253,7 @@ vectfit(xt::pyarray<double> &f,
         throw std::runtime_error("Error: unknown cindex value.");
     }
 
-    // Check infinite value
+    // Check infinite values
     xt::filter(Dk, xt::isinf(Dk)) = TOLhigh + 0.0i;
 
     // Polynomial terms
@@ -296,6 +306,7 @@ vectfit(xt::pyarray<double> &f,
       }
 
       // QR decomposition
+      // Hotspots of the algorithm
       auto QR_tuple = xt::linalg::qr(A);
       auto R = std::get<1>(QR_tuple);
       auto ind1 = xt::range(n * (N + 1), (n + 1) * (N + 1));
@@ -519,6 +530,7 @@ vectfit(xt::pyarray<double> &f,
     rmserr = xt::linalg::norm(fit - f) / std::sqrt(Nv * Ns);
   }
 
+  // Return a tuple including the updated results
   return std::make_tuple(poles, residues, polys, fit, rmserr);
 }
 
@@ -563,15 +575,15 @@ PYBIND11_MODULE(vectfit, m)
         n_polys : int
             Number of polynomial coefficients to be fitted, [0, 11]
         skip_pole : bool
-            whether or not to skip the calculation of poles
+            Whether or not to skip the calculation of poles
         skip_res : bool
-            whether or not to skip the calculation of residues (including the
+            Whether or not to skip the calculation of residues (including the
             polynomials)
 
         Returns
         -------
         Tuple : (numpy.ndarray [complex], numpy.ndarray [complex], numpy.ndarray, numpy.ndarray, float)
-            the updated poles, residues, polynomial coefficients,
+            The updated poles, residues, polynomial coefficients,
             fitted signals on the sample points, root mean square error
 
     )pbdoc", py::arg("f"), py::arg("s"), py::arg("poles"), py::arg("weight"),
