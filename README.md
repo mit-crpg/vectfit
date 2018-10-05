@@ -17,15 +17,13 @@ Fitting [1] with relaxed non-triviality constraint for faster convergence
 and smaller fitting errors [2], and utilization of matrix structure for fast
 solution of the pole identifion step [3].
 
-[1] B. Gustavsen and A. Semlyen, "Rational approximation of frequency
+- [1] B. Gustavsen and A. Semlyen, "Rational approximation of frequency
     domain responses by Vector Fitting", IEEE Trans. Power Delivery,
     vol. 14, no. 3, pp. 1052-1061, July 1999.
-
-[2] B. Gustavsen, "Improving the pole relocating properties of vector
+- [2] B. Gustavsen, "Improving the pole relocating properties of vector
     fitting", IEEE Trans. Power Delivery, vol. 21, no. 3, pp. 1587-1592,
     July 2006.
-
-[3] D. Deschrijver, M. Mrozowski, T. Dhaene, and D. De Zutter,
+- [3] D. Deschrijver, M. Mrozowski, T. Dhaene, and D. De Zutter,
     "Macromodeling of Multiport Systems Using a Fast Implementation of
     the Vector Fitting Method", IEEE Microwave and Wireless Components
     Letters, vol. 18, no. 6, pp. 383-385, June 2008.
@@ -36,10 +34,10 @@ All credit goes to Bjorn Gustavsen for his MATLAB implementation.
 
 ## Implementation
 
-The `vectfit` function is implemented in C++, using [`xtensor`](https://github.com/QuantStack/xtensor)
+The `vectfit` functions are implemented in C++, using [`xtensor`](https://github.com/QuantStack/xtensor)
 for multi-dimensional arrays and [`xtensor-blas`](https://github.com/QuantStack/xtensor-blas)
 for linear-algebra operations.
-The C++ function is wrapped into a Python extension module through
+The C++ functions are wrapped into a Python extension module through
 [`xtensor-python`](https://github.com/QuantStack/xtensor-python) and
 [`pybind11`](https://github.com/pybind/pybind11).
 
@@ -60,6 +58,23 @@ poles, residues, cf, fit, rms = m.vectfit(f, s, init_poles, weight)
 ```
 
 ## Installation
+
+### Prerequisites
+
+- C++ compiler such as g++
+
+  `sudo apt install g++`
+
+- Necessary libraries including [`xtensor`](https://github.com/QuantStack/xtensor),
+  [`xtensor-blas`](https://github.com/QuantStack/xtensor-blas),
+  [`xtensor-python`](https://github.com/QuantStack/xtensor-python), and
+  [`pybind11`](https://github.com/pybind/pybind11)
+
+  It is convenient to install all the libraries through conda package manager:
+
+  `conda install -c conda-forge xtensor-blas xtensor-python`
+
+### Build and install
 
 **On Unix (Linux, OS X)**
 
