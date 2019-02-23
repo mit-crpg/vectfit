@@ -309,14 +309,13 @@ vectfit(xt::pyarray<double> &f,
       // Hotspots of the algorithm
       auto QR_tuple = xt::linalg::qr(A);
       auto R = std::get<1>(QR_tuple);
-      auto ind1 = xt::range(n * (N + 1), (n + 1) * (N + 1));
-      auto ind2 = xt::range(N + Nc, N + Nc + N + 1);
-      xt::view(AA, ind1) = xt::view(R, ind2, ind2);
+      xt::view(AA, xt::range(n*(N+1), (n+1)*(N+1))) =
+            xt::view(R, xt::range(N+Nc, N+Nc+N+1), xt::range(N+Nc, N+Nc+N+1));
       if (n == Nv - 1)
       {
         auto Q = std::get<0>(QR_tuple);
-        xt::view(bb, ind1) = Ns * scale *
-                 xt::view(Q, Q.shape()[0] - 1, xt::range(N + Nc, Q.shape()[1]));
+        xt::view(bb, xt::range(n*(N+1), (n+1)*(N+1))) = Ns * scale *
+              xt::view(Q, Q.shape()[0] - 1, xt::range(N+Nc, Q.shape()[1]));
       }
     }
 
@@ -328,7 +327,7 @@ vectfit(xt::pyarray<double> &f,
     }
 
     auto results = xt::linalg::lstsq(AA, bb);
-    auto x = xt::view(std::get<0>(results), xt::all(), 1);
+    auto x = std::get<0>(results);
     x *= Escale;
     auto C = xt::xarray<double>(xt::view(x, xt::range(0, x.size() - 1)));
     auto D = x(x.size() - 1);
@@ -375,11 +374,10 @@ vectfit(xt::pyarray<double> &f,
         auto QR_tuple = xt::linalg::qr(A);
         auto Q = std::get<0>(QR_tuple);
         auto R = std::get<1>(QR_tuple);
-        auto ind1 = xt::range(n * N, (n + 1) * N);
-        auto ind2 = xt::range(N + Nc, N + Nc + N);
-        xt::view(AA, ind1) = xt::view(R, ind2, ind2);
-        xt::view(bb, ind1) = xt::linalg::dot(
-                             xt::transpose(xt::view(Q, xt::all(), ind2)), b);
+        xt::view(AA, xt::range(n*N, (n+1)*N)) =
+            xt::view(R, xt::range(N+Nc, N+Nc+N), xt::range(N+Nc, N+Nc+N));
+        xt::view(bb, xt::range(n*N, (n+1)*N)) = xt::linalg::dot(
+            xt::transpose(xt::view(Q, xt::all(), xt::range(N+Nc, N+Nc+N))), b);
       }
 
       xt::xtensor<double, 1> Escale ({N}, 0.0);
@@ -390,7 +388,7 @@ vectfit(xt::pyarray<double> &f,
       }
 
       auto results = xt::linalg::lstsq(AA, bb);
-      auto C = xt::view(std::get<0>(results), xt::all(), 1);
+      auto C = std::get<0>(results);
       C *= Escale;
     }
 
@@ -490,7 +488,7 @@ vectfit(xt::pyarray<double> &f,
       }
 
       auto results = xt::linalg::lstsq(A, b);
-      auto x = xt::view(std::get<0>(results), xt::all(), 1);
+      auto x = std::get<0>(results);
       x *= Escale;
 
       xt::view(Cr, n) = xt::view(x, xt::range(0, N));

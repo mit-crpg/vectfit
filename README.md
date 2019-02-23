@@ -72,7 +72,7 @@ poles, residues, cf, fit, rms = m.vectfit(f, s, init_poles, weight)
 
   It is convenient to install all the libraries through conda package manager:
 
-  `conda install -c conda-forge xtensor-blas xtensor-python`
+  `conda install -c conda-forge xtensor-blas=0.15 xtensor-python`
 
 ### Build and install
 
