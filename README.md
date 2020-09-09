@@ -1,5 +1,7 @@
 # Fast Relaxed Vector Fitting Implementation in C++
 
+[![Travis CI build status](https://travis-ci.org/liangjg/vectfit)](https://travis-ci.org/liangjg/vectfit)
+
 The `vectfit` function approximates a response ![fs](https://latex.codecogs.com/gif.latex?\mathbf{f}(s))
 (generally a vector) with a rational function:
 
