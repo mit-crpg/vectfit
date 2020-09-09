@@ -118,10 +118,10 @@ class VectfitTest(TestCase):
         Ns = 20000
         N = 1000
         s = np.linspace(1.0e-2, 5.e3, Ns)
-        poles = np.linspace(1.1e-2, 4.8e+3, N/2);
+        poles = np.linspace(1.1e-2, 4.8e+3, N//2);
         poles = poles + poles*0.01j
         poles = np.sort(np.append(poles, np.conj(poles)))
-        residues = np.linspace(1e+2, 1e+6, N/2);
+        residues = np.linspace(1e+2, 1e+6, N//2);
         residues = residues + residues*0.5j
         residues = np.sort(np.append(residues, np.conj(residues)))
         residues = residues.reshape((1, N))
@@ -129,7 +129,7 @@ class VectfitTest(TestCase):
         for p, r in zip(poles, residues[0]):
             f[0] += (r/(s - p)).real
         weight = 1.0/f
-        poles_init = np.linspace(1.2e-2, 4.7e+3, N/2);
+        poles_init = np.linspace(1.2e-2, 4.7e+3, N//2);
         poles_init = poles_init + poles_init*0.01j
         poles_init = np.sort(np.append(poles_init, np.conj(poles_init)))
 

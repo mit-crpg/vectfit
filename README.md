@@ -72,8 +72,9 @@ poles, residues, cf, fit, rms = m.vectfit(f, s, init_poles, weight)
   [`xtensor-python`](https://github.com/QuantStack/xtensor-python), and
   [`pybind11`](https://github.com/pybind/pybind11)
 
-  Check out the '[installation steps on Ubuntu](./tools/ci/travis-install.sh)', or,
-it is convenient to install all the libraries through conda package manager:
+  Refer to '[installation steps on Ubuntu](./tools/ci/travis-install.sh)' for building
+necessary libraries from source, or, it is convenient to install all the libraries through
+conda package manager:
 
   `conda install -c conda-forge xtensor-blas=0.15 xtensor-python`
 
@@ -82,6 +83,7 @@ it is convenient to install all the libraries through conda package manager:
 **On Unix (Linux, OS X)**
 
  - clone this repository
+ - `git clone https://github.com/liangjg/vectfit.git`
  - `pip install ./vectfit`
 
 **On Windows (Requires Visual Studio 2015)**
