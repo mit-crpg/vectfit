@@ -1,0 +1,18 @@
+
+sudo: required
+dist: xenial
+language: python
+addons:
+  apt:
+    packages:
+      - libblas-dev
+      - liblapack-dev
+    config:
+      retries: true
+matrix:
+  include:
+    - python: "3.5"
+install:
+  - ./tools/ci/travis-install.sh
+script:
+  - py.test .
