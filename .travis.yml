@@ -11,7 +11,7 @@ addons:
       retries: true
 matrix:
   include:
-    - python: "3.5"
+    - python: "3.7"
 install:
   - ./tools/ci/travis-install.sh
 script:

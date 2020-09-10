@@ -17,6 +17,8 @@ XTENSOR_PYTHON_REPO='https://github.com/xtensor-stack/xtensor-python'
 XTENSOR_BLAS_BRANCH='0.17.1'
 XTENSOR_BLAS_REPO='https://github.com/xtensor-stack/xtensor-blas'
 
+pip install --upgrade pip
+
 cd $HOME
 git clone -b $PYBIND_BRANCH $PYBIND_REPO
 cd pybind11 && mkdir build && cd build && cmake .. && sudo make install
@@ -40,4 +42,4 @@ cd xtensor-blas && mkdir build && cd build && cmake .. && sudo make install
 # Install vectfit
 cd $HOME
 git clone https://github.com/liangjg/vectfit.git
-pip3 install ./vectfit
+pip install ./vectfit
