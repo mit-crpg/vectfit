@@ -1,9 +1,6 @@
 #!/bin/bash
 set -ex
 
-pip install --upgrade pip
-pip install pybind11
-
 PYBIND_BRANCH='master'
 PYBIND_REPO='https://github.com/pybind/pybind11'
 
@@ -20,25 +17,26 @@ XTENSOR_BLAS_BRANCH='0.17.1'
 XTENSOR_BLAS_REPO='https://github.com/xtensor-stack/xtensor-blas'
 
 
-#cd $HOME
-#git clone -b $PYBIND_BRANCH $PYBIND_REPO
-#cd pybind11 && mkdir build && cd build && cmake .. && sudo make install
+cd $HOME
+git clone -b $PYBIND_BRANCH $PYBIND_REPO
+pip install ./pybind11
+cd pybind11 && mkdir build && cd build && cmake .. && sudo make -j install
 
 cd $HOME
 git clone -b $XTL_BRANCH $XTL_REPO
-cd xtl && mkdir build && cd build && cmake .. && sudo make install
+cd xtl && mkdir build && cd build && cmake .. && sudo make -j install
 
 cd $HOME
 git clone -b $XTENSOR_BRANCH $XTENSOR_REPO
-cd xtensor && mkdir build && cd build && cmake .. && sudo make install
+cd xtensor && mkdir build && cd build && cmake .. && sudo make -j install
 
 cd $HOME
 git clone -b $XTENSOR_PYTHON_BRANCH $XTENSOR_PYTHON_REPO
-cd xtensor-python && mkdir build && cd build && cmake .. && sudo make install
+cd xtensor-python && mkdir build && cd build && cmake .. && sudo make -j install
 
 cd $HOME
 git clone -b $XTENSOR_BLAS_BRANCH $XTENSOR_BLAS_REPO
-cd xtensor-blas && mkdir build && cd build && cmake .. && sudo make install
+cd xtensor-blas && mkdir build && cd build && cmake .. && sudo make -j install
 
 # Install vectfit
 cd $HOME
