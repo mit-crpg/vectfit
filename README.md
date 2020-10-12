@@ -68,7 +68,7 @@ poles, residues, cf, fit, rms = m.vectfit(f, s, init_poles, weight)
   `sudo apt install g++`
 
 - Necessary libraries including [`xtensor`](https://github.com/QuantStack/xtensor),
-  [`xtensor-blas`](https://github.com/QuantStack/xtensor-blas),
+  [`xtensor-blas`](https://github.com/QuantStack/xtensor-blas)(>=0.15),
   [`xtensor-python`](https://github.com/QuantStack/xtensor-python), and
   [`pybind11`](https://github.com/pybind/pybind11)
 
@@ -76,7 +76,7 @@ poles, residues, cf, fit, rms = m.vectfit(f, s, init_poles, weight)
 necessary libraries from source, or, it is convenient to install all the libraries through
 conda package manager:
 
-  `conda install -c conda-forge xtensor-blas=0.15 xtensor-python`
+  `conda install -c conda-forge xtensor-blas xtensor-python`
 
 ### Build and install
 
