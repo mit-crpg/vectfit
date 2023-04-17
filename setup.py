@@ -1,40 +1,15 @@
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
+import setuptools
 import sys
 import os
-import setuptools
+import tempfile
+
+import numpy as np
+import pybind11
+
 
 __version__ = '0.1'
-
-
-class get_pybind_include(object):
-    """Helper class to determine the pybind11 include path
-
-    The purpose of this class is to postpone importing pybind11
-    until it is actually installed, so that the ``get_include()``
-    method can be invoked. """
-
-    def __init__(self, user=False):
-        self.user = user
-
-    def __str__(self):
-        import pybind11
-        return pybind11.get_include(self.user)
-
-
-class get_numpy_include(object):
-    """Helper class to determine the numpy include path
-
-    The purpose of this class is to postpone importing numpy
-    until it is actually installed, so that the ``get_include()``
-    method can be invoked. """
-
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        import numpy as np
-        return np.get_include()
 
 
 ext_modules = [
@@ -43,9 +18,9 @@ ext_modules = [
         ['src/vectfit.cpp'],
         include_dirs=[
             # Path to pybind11 headers
-            get_pybind_include(),
-            get_pybind_include(user=True),
-            get_numpy_include(),
+            pybind11.get_include(),
+            pybind11.get_include(True),
+            np.get_include(),
             os.path.join(sys.prefix, 'include'),
             os.path.join(sys.prefix, 'Library', 'include')
         ],
@@ -59,7 +34,6 @@ def has_flag(compiler, flagname):
     """Return a boolean indicating whether a flag name is supported on
     the specified compiler.
     """
-    import tempfile
     with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
         f.write('int main (int argc, char **argv) { return 0; }')
         try:
@@ -106,7 +80,7 @@ class BuildExt(build_ext):
 
 with open('README.md') as f:
     long_description = f.read()
-    
+
 setup(
     name='vectfit',
     version=__version__,
@@ -116,7 +90,7 @@ setup(
     description= 'Fast Relaxed Vector Fitting Implementation in C++',
     long_description=long_description,
     ext_modules=ext_modules,
-    install_requires=['pybind11>=2.0.1', 'numpy'],
+    install_requires=['numpy'],
     cmdclass={'build_ext': BuildExt},
     zip_safe=False,
 )
